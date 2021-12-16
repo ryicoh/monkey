@@ -62,3 +62,34 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	}
 	return true
 }
+
+func TestPeekError(t *testing.T) {
+	input := `
+let x 5;
+let = 10;
+let 838383;
+`
+	l := lexer.New(input)
+	p := newFunction(l)
+	program := p.ParseProgram()
+	if program == nil {
+		t.Fatalf("ParseProgram() returned nil")
+	}
+
+	errors := p.Errors()
+	tests := []string{
+		"expected next token to be =, got INT instead",
+		"expected next token to be IDENT, got = instead",
+		"expected next token to be IDENT, got INT instead",
+	}
+	for i, msg := range errors {
+		if msg != tests[i] {
+			t.Errorf("parser error: %q", msg)
+		}
+	}
+}
+
+func newFunction(l *lexer.Lexer) *Parser {
+	p := New(l)
+	return p
+}
